@@ -7,9 +7,9 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity, 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, LOGGER, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DEVICE_ID
+from .const import DOMAIN, LOGGER
 from .conneqtechapi import ConneqtechApi
-from .device import ConneqtechDevice
+from .device import ConneqtechDevice, CntDevice
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
@@ -19,14 +19,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     device: ConneqtechDevice = hass.data[DOMAIN][entry.entry_id]["device"]
     LOGGER.debug(f"Setting up device tracker entity for {device.imei}")
     api: ConneqtechApi = hass.data[DOMAIN][entry.entry_id]["api"]
-    async_add_entities([ConneqtechDeviceTracker(api, device)])
+    async_add_entities([ConneqtechDeviceTracker(hass, entry, api, device)])
 
 
-class ConneqtechDeviceTracker(TrackerEntity):
+class ConneqtechDeviceTracker(CntDevice, TrackerEntity):
     """Conneqtech device tracker entity."""
 
-    def __init__(self, api: ConneqtechApi, device: ConneqtechDevice):
+    def __init__(self, hass, config_entry, api: ConneqtechApi, device: ConneqtechDevice):
         """Initialize the entity."""
+        super().__init__(hass, config_entry, device)
         self._device = device
         self._api = api
 

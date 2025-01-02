@@ -28,15 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "api": conneqtechApi,
     }
 
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, device_id)},
-        manufacturer="Conneqtech",
-        name=device_id,
-        model=device.device_type,
-        sw_version=device.firmware_version,
-    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

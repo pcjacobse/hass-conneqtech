@@ -4,6 +4,7 @@ import logging
 from homeassistant.const import Platform
 
 DOMAIN = "conneqtech"
+TOPIC_UPDATE: str = f"{DOMAIN}_update_{0}"
 
 LOGGER = logging.getLogger(__name__)
 
