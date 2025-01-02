@@ -1,0 +1,9 @@
+{
+    "domain": "conneqtech",
+    "name": "Conneqtech",
+    "integration_type": "device",
+    "requirements": [],
+    "iot_class": "cloud_push",
+    "version": "0.0.1",
+    "config_flow": true
+}
