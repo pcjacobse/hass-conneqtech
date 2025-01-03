@@ -56,7 +56,7 @@ class ConneqtechConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             user_input = await validate_device_input(self.hass, user_input)
             device_id = user_input[CONF_DEVICE_ID]
-            device = await self.conneqtechApi.async_get_device(device_id)
+            await self.conneqtechApi.async_get_device(device_id)
             self.user_input_data[CONF_DEVICE_ID] = device_id
         except ClientResponseError as e:
             err = e.args[0]
@@ -97,8 +97,7 @@ class ConneqtechConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             self.conneqtechApi = ConneqtechApi(
                 self.hass,
-                client_id,
-                client_secret,
+                user_input,
             )
             await self.conneqtechApi.async_init()
 

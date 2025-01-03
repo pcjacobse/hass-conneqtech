@@ -5,27 +5,45 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohttp import ClientSession, ClientResponseError, BasicAuth
-from aiohttp.client_exceptions import ClientError
-
+from aiohttp import ClientSession, BasicAuth
 from homeassistant.core import HomeAssistant
-
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.config_entries import ConfigEntry
+from datetime import timedelta
 from .device import ConneqtechDevice
+from .const import LOGGER, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DEVICE_ID, DOMAIN
 
 
-class ConneqtechApi:
+class ConneqtechApi(DataUpdateCoordinator):
     """Conneqtech API class."""
 
     def __init__(
             self,
             hass: HomeAssistant,
-            client_id: str,
-            client_secret: str,
+            config_entry: ConfigEntry,
     ) -> None:
         """Initialize the Conneqtech API class."""
         self.hass: HomeAssistant = hass
         self.session: ClientSession = self.hass.helpers.aiohttp_client.async_get_clientsession()
-        self.auth = BasicAuth(client_id, client_secret)
+        self.auth = BasicAuth(
+            config_entry.data.get(CONF_CLIENT_ID),
+            config_entry.data.get(CONF_CLIENT_SECRET),
+        )
+        self.config_entry = config_entry
+
+        super().__init__(
+            hass,
+            LOGGER,
+            name=f"{DOMAIN} ({config_entry.unique_id})",
+            # Set update method to get devices on first load.
+            update_method=self.async_update_data,
+            # Do not set a polling interval as data will be pushed.
+            # You can remove this line but left here for explanatory purposes.
+            update_interval=timedelta(seconds=15),
+        )
+
+    async def async_update_data(self) -> Any:
+        return await self.async_get_device(self.config_entry.data.get(CONF_DEVICE_ID))
 
     async def async_init(self) -> None:
         """Initialize the Conneqtech API class."""
@@ -42,20 +60,4 @@ class ConneqtechApi:
             auth=self.auth,
         )
         resp.raise_for_status()
-        data = await resp.json()
-
-        return ConneqtechDevice(
-            imei=data["imei"],
-            params=data["params"],
-            device_type=data["device_type"],
-            firmware_version=data.get("payload_state", {}).get(
-                "tracker", {}).get("config", {}).get("fwver"),
-            latitude=data.get("payload_state", {}).get("tracker", {}).get(
-                "loc", {}).get("geo", {}).get("coordinates", [None, None])[1],
-            longitude=data.get("payload_state", {}).get("tracker", {}).get(
-                "loc", {}).get("geo", {}).get("coordinates", [None, None])[0],
-            battery_level=data.get("payload_state", {}).get(
-                "tracker", {}).get("metric", {}).get("bbatp"),
-            speed=data.get("payload_state", {}).get(
-                "tracker", {}).get("loc", {}).get("sp"),
-        )
+        return ConneqtechDevice(await resp.json())
