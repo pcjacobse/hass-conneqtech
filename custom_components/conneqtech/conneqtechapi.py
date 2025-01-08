@@ -13,7 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 # from datetime import timedelta
 from .device import ConneqtechDevice
-from .const import LOGGER, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DEVICE_ID, DOMAIN, set_nested_value
+from .const import LOGGER, DOMAIN, set_nested_value
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import json
 
 
@@ -64,7 +65,7 @@ class ConneqtechApi:
         LOGGER.debug(f"Initializing Conneqtech API for {device_id}")
 
         self.hass: HomeAssistant = hass
-        self.session: ClientSession = self.hass.helpers.aiohttp_client.async_get_clientsession()
+        self.session: ClientSession = async_get_clientsession(hass)
         self.auth = BasicAuth(
             client_id,
             client_secret,
