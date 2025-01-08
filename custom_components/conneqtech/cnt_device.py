@@ -1,12 +1,6 @@
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from .conneqtechapi import ConneqtechApi
-from .const import LOGGER, TOPIC_UPDATE, DOMAIN
+from .const import DOMAIN
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from .device import ConneqtechDevice
 
 
 class CntDevice(CoordinatorEntity):

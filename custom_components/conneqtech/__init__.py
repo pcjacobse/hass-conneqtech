@@ -1,6 +1,6 @@
 """Conneqtech IOT integration."""
 
-from .conneqtechapi import ConneqtechApi
+from .conneqtechapi import ConneqtechApi, Coordinator
 from .const import DOMAIN, LOGGER, PLATFORMS, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -27,10 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_id = entry.data.get(CONF_DEVICE_ID)
 
-    conneqtechApi = ConneqtechApi(hass, entry)
+    conneqtechApi = ConneqtechApi(
+        hass,
+        client_id=entry.data.get("client_id"),
+        client_secret=entry.data.get("client_secret"),
+        device_id=device_id,
+    )
     await conneqtechApi.async_init()
-    await conneqtechApi.async_config_entry_first_refresh()
 
+    coordinator = Coordinator(hass, entry, conneqtechApi)
+    await coordinator.async_config_entry_first_refresh()
     cancel_update_listener = entry.add_update_listener(_async_update_listener)
 
     if entry.unique_id is None:
@@ -38,8 +44,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, unique_id=f"conneqtech-{device_id}")
 
     hass.data[DOMAIN][entry.entry_id] = RuntimeData(
-        conneqtechApi, cancel_update_listener)
+        coordinator, cancel_update_listener)
 
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_connect(),
+        name="Conneqtech IOT connection"
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

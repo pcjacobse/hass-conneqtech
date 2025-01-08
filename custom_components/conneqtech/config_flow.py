@@ -1,14 +1,14 @@
 """Config flow for Conneqtech integration."""
 from __future__ import annotations
+from typing import Any, Dict, Optional
 
-from typing import Any
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DEVICE_ID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from aiohttp import BasicAuth, ClientResponseError
+from aiohttp import ClientResponseError
 
 from .const import DOMAIN, LOGGER
 from .conneqtechapi import ConneqtechApi
@@ -46,8 +46,9 @@ class ConneqtechConfigFlow(ConfigFlow, domain=DOMAIN):
         self._existing_entry: config_entries.ConfigEntry | None = None
         self.reauth_mode = False
 
-    async def async_step_device(self, user_input: ConfigEntry) -> FlowResult:
+    async def async_step_device(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle a flow initialized by the device."""
+        LOGGER.debug("async_step_device")
         if user_input is None:
             return self.async_show_form(
                 step_id="device",
@@ -83,7 +84,7 @@ class ConneqtechConfigFlow(ConfigFlow, domain=DOMAIN):
             data=self.user_input_data
         )
 
-    async def async_step_user(self, user_input: ConfigEntry) -> FlowResult:
+    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -93,14 +94,15 @@ class ConneqtechConfigFlow(ConfigFlow, domain=DOMAIN):
 
         client_id = user_input[CONF_CLIENT_ID]
         client_secret = user_input[CONF_CLIENT_SECRET]
-
         try:
+            LOGGER.debug("create ConneqtechApi")
             self.conneqtechApi = ConneqtechApi(
                 self.hass,
-                user_input,
+                client_id=client_id,
+                client_secret=client_secret,
+                device_id=None,
             )
             await self.conneqtechApi.async_init()
-
             if self.reauth_mode:
                 self.hass.config_entries.async_update_entry(
                     self._existing_entry,

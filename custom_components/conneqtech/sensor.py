@@ -83,14 +83,12 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="payload_state.dts",
         name="Last Connection Date",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     # payload_state.tracker.loc.dtg = last location date
     SensorEntityDescription(
         key="payload_state.tracker.loc.dtg",
         name="Last Location Date",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -119,7 +117,6 @@ class ConneqtechSensor(CntDevice, SensorEntity):
     @property
     def native_value(self) -> Any:
         """Return the state of the sensor."""
-        LOGGER.debug(f"Getting value for sensor {self.entity_description.key}")
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
             return parse_datetime(get_nested_value(self.coordinator.data.raw, self.entity_description.key))
         return get_nested_value(self.coordinator.data.raw, self.entity_description.key)

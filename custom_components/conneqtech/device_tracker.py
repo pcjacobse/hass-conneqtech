@@ -5,11 +5,9 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity, ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER
-from .conneqtechapi import ConneqtechApi
-from .device import ConneqtechDevice
+from .conneqtechapi import Coordinator
 from .cnt_device import CntDevice
 
 
@@ -17,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     """Set up the device tracker entities."""
     LOGGER.debug(f"Setting up device tracker entities for {DOMAIN}")
 
-    coordinator: ConneqtechApi = hass.data[DOMAIN][
+    coordinator: Coordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
 
