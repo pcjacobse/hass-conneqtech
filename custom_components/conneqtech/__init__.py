@@ -10,7 +10,8 @@ from dataclasses import dataclass
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from collections.abc import Callable
-
+import asyncio
+import importlib
 
 @dataclass
 class RuntimeData:
@@ -51,9 +52,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator.async_connect(),
         name="Conneqtech IOT connection"
     )
+
+    # Preload platform modules off the event loop to avoid blocking import warnings.
+    await _async_preload_platforms(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def _async_preload_platforms(hass: HomeAssistant) -> None:
+    """Import platform modules in the executor before forwarding setups."""
+    await asyncio.gather(
+        *(
+            hass.async_add_executor_job(
+                importlib.import_module,
+                f"{__package__}.{platform.value}",
+            )
+            for platform in PLATFORMS
+        )
+    )
 
 
 async def _async_update_listener(hass: HomeAssistant, config_entry):
